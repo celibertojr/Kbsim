@@ -4,6 +4,7 @@ from sys import *
 import random
 import numpy
 from collections import defaultdict
+from timeit import default_timer as timer  #to determine the time of simulation
 
 def load(sim):
     return QL(sim)
@@ -13,6 +14,7 @@ class QL(Kilobot):
         Kilobot.__init__(self, sim)
 	
 	self.add = open("Qfile.txt",'wb')
+	self.addtime = open("Run_Time.txt",'wb')
 	
 	self.steps = 0    #number of steps
 	self.episodes=0   # number of episodes 
@@ -74,6 +76,7 @@ class QL(Kilobot):
 	if (self.id == 2):
 	    if(self.first ==1): #reset Q table !
 		self._resetQ()
+		start = timer() #start the times
 	    
 	    self.first = 0
 	
@@ -101,7 +104,7 @@ class QL(Kilobot):
 	
 	self.QL[state[0],state[1],action]=self.QLold+(self.alpha*delta)
 	
-	#print estado[0],estado[1] #just to show if is working
+	
 
 ########################################
     
@@ -286,7 +289,10 @@ class QL(Kilobot):
 	    self.goal=0
 	    
 	if (self.episodes > self.MAXepisodes):
+	    end = timer() #finish timer
+	    TimeRun=end-start
 	    print "Final Simulacao"
+            print "The simulation run for" % TimeRun
 	    #self.file.close()
 	    #self.PC -= 1
 	    exit(-42)
