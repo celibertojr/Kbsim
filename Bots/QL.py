@@ -1,4 +1,3 @@
-
 from math import *
 from Kilobot import *
 from sys import *
@@ -13,21 +12,21 @@ class QL(Kilobot):
     def __init__(self, sim):
         Kilobot.__init__(self, sim)
 	
-	#self.arquivo = open('arquivo.txt', 'wb')
-	self.adicionar = open("Qarquivo.txt",'wb')
+	self.add = open("Qfile.txt",'wb')
 	
-	self.passos = 0
-	self.episodios=0
+	self.steps = 0    #number of steps
+	self.episodes=0   # number of episodes 
 	
+	self.goal=0;   #reach the goal ?
 	
-	self.objetivo=0;
-	
-	self.MAXpassos=10000
-	self.MAXepisodios = 100
+	self.MAXsteps=10000 #number maximum of steps 
+	self.MAXepisodes = 100 #number maximum of episodes
 
 
 	#QL
 	self.QL = defaultdict(int)
+
+	#Q-Learning configuration 
 
 	self.epsilon = 0.1
 	self.alpha = 0.2
@@ -40,27 +39,27 @@ class QL(Kilobot):
         self.id = self.secretID
 
         
-	self.estado1 =0
-	self.estado2 =0
-	self.primeira = 1
+	self.state1 =0
+	self.state2 =0
+	self.first = 1
 	
-	######################agente
-	self.D0=0
-	self.D1=0
-	self.px=0
-	self.py=0
+	##########agent values to determine every states
+	self.D0=0 #Distance of agent 0
+	self.D1=0 #Distance of agent 1
+	self.px=0 #value X of agent 0
+	self.py=0 #value Y of agent 1
 	self.qx=0
 	self.qy=0
 	
 	
-	self.posAg0=0
-	self.posAg1=0
+	self.posAg0=0  #where is the agent 0 ?
+	self.posAg1=0  #where is the agent 1 ?
 
-        self.distancia = 0
+        self.distance = 0  #distance
 	self.var_data = [0x00, 0x00, 0x00]
-	self.var_estado=[0,0]
+	self.var_state=[0,0]
 
-	#aqui comeca
+	#The programa Start here !!!
 
 	self.program = [self.setmsg,
 			self.run,
@@ -73,63 +72,60 @@ class QL(Kilobot):
     def run(self):
 
 	if (self.id == 2):
-	    if(self.primeira==1): #reseta tabela Q
+	    if(self.first ==1): #reset Q table !
 		self._resetQ()
 	    
-	    self.primeira = 0
+	    self.first = 0
 	
-################################## Aqui comeca o QL ##########################################################
+################################## Here is the QL  ##########################################################
 
-	    self.vstateinicial=self._estado()  							# determinar o estado
-	    self.action=self._chooseaction(self.vstateinicial)					#escolhe a acao
-	    self._applyaction (self.action)							#executa a acao
-	    self.vstatefinal=self._estado()							#determina o novo estado
-	    self.reward = self._reward(self.vstatefinal)					#recompensa
-	    self._QL_update(self.vstateinicial,self.vstatefinal,self.reward,self.action) 	#atualiza QL
+	    self.vstatefisrt=self._state()  							# Get the state.
+	    self.action=self._chooseaction(self.vstatefisrt)					#choice action
+	    self._applyaction (self.action)							#apply action
+	    self.vstateend=self._state()							#save the new state
+	    self.reward = self._reward(self.vstateend)					#get reward
+	    self._QL_update(self.vstatefisrt,self.vstateend,self.reward,self.action) 	        #update QL
 	    
-	    #print self.vstateinicial
-	    
-   
-########################################	    
-    def _QL_update(self,estado,estadoN,reward,action):
+	    #print self.vstatefisrt   # just to show if is working
+	  
+############################ UPDATE QL ###################################
+    def _QL_update(self,state,stateN,reward,action):
 	
-	self.best_a=self._chooseargmax(estadoN)
-	self.QLNew=self._getQ(estadoN, self.best_a)
-	self.QLold=self._getQ(estado, action)
+	self.best_a=self._chooseargmax(stateN) #chose the best action
+	self.QLNew=self._getQ(stateN, self.best_a) 
+	self.QLold=self._getQ(state, action)
 	self.Qupdate=0
 	
-	#calcula delta
+	#delta value of QL
 	delta= ((reward) + ((self.gamma*self.QLNew) - self.QLold))
 	
-	self.QL[estado[0],estado[1],action]=self.QLold+(self.alpha*delta)
+	self.QL[state[0],state[1],action]=self.QLold+(self.alpha*delta)
 	
-	#print estado[0],estado[1]
+	#print estado[0],estado[1] #just to show if is working
 
 ########################################
     
 	
-##########################################
+##################   RESET QL TABLE ####################
 
     def _resetQ(self):
-	print "tabela apagada"
+	print "table erased"
 	loop0=0
 	loop1=0
 	loop2=0
 	for loop0 in range(200):
 	    for loop1 in range(200):
 		for loop2 in range(self.actions):
-		    self.QL[loop0, loop1, loop2] = random.random()
+		    self.QL[loop0, loop1, loop2] = random.random() #set the table with random numbers
 		    
 	
-################################
+################# VALUE OF Q #############
 
     def _getQ(self, state, action):
-	#print action
 	self.value=self.QL[state[0],state[1],action]
-	#print self.value
 	return	self.value
     
-##########################################################
+###################CHOOSE ACTION ##############################
 
     def _chooseaction(self, state):
 	
@@ -137,15 +133,12 @@ class QL(Kilobot):
 	self.vQ =0
 	self.action =0
 	a=0
-	
-	#print state[0],state[1]
 		
-        if (random.random() < self.epsilon):
+        if (random.random() < self.epsilon):  #EXPLORATION 
 	    self.action=int(random.uniform(0,self.actions))
 	
-	else:
-	   
-	    
+	else:  #EXPLOTATION
+	       
 	    for a in range(self.actions):
 		self.vQ = self.QL[state[0],state[1],a]
 		if self.vQ > self.temp:
@@ -154,7 +147,7 @@ class QL(Kilobot):
 
         return self.action
     
-####################################################
+################ CHOOSE ARG MAX ###############################
 
     def _chooseargmax(self, state):
 	
@@ -173,7 +166,7 @@ class QL(Kilobot):
 
 ####################################################
 
-    def _estado(self):
+    def _state(self):
     
 	self.get_message()
  
@@ -203,13 +196,13 @@ class QL(Kilobot):
     
  
 ####################################################################################
-    def _reward(self,estado):
+    def _reward(self,estate):
 	reward=0
-	if estado[0] < 60 or estado[1] < 60 :
+	if estate[0] < 60 or estate[1] < 60 :
 	    reward = 10
-	if estado[0] < 60 and estado[1] < 60 :
+	if estate[0] < 60 and estate[1] < 60 :
 	    reward = 100
-	    self.objetivo += 1
+	    self.goal += 1
 	else:
 	    reward = -1
  
@@ -243,7 +236,7 @@ class QL(Kilobot):
 	    self.fullCCW()
 	    
 	
-	if action ==3:
+	if action ==3:    #do nothing
 	    self.stop()
 	
 
@@ -266,41 +259,35 @@ class QL(Kilobot):
         self.PC -= 1
 	
 	
-    def _grava(self, numero, valor ):
-	print "Gravando tabela"
+    def _record(self, numero, valor ):
+	print "Record Table"
 	s1=str(numero)
 	s2=str(valor)
-	self.adicionar = open("Qarquivo.txt","a")
-	self.adicionar.write(s1)
-	self.adicionar.write(' ')
-	self.adicionar.write(s2)
-	self.adicionar.write('\n')
-	self.adicionar.close()
+	self.add = open("Qfile.txt","a")
+	self.add.write(s1)
+	self.add.write(' ')
+	self.add.write(s2)
+	self.add.write('\n')
+	self.add.close()
 	
 	
     def loop(self):
 	
 	if (self.id == 2):
-	    self.passos += 1 # conta as interacoes
+	    self.steps += 1 # number of steps
 	
-	#print "(Passos Ep)",self.passos,self.episodios
+	#print "(steps Ep)",self.step,self.episode  #just to test
 	
-	
-	#print self.interacao
-	
-        if (self.passos > self.MAXpassos): # interacoes
+        if (self.steps > self.MAXsteps): # interacoes
+    	    
+	    self._record(self.episodes,self.goal)    
+	    self.episodes +=1
+	    self.steps=0
+	    self.goal=0
 	    
-	    
-	    self._grava(self.episodios,self.objetivo)
-	    
-	    
-	    self.episodios +=1
-	    self.passos=0
-	    self.objetivo=0
-	    
-	if (self.episodios > self.MAXepisodios):
+	if (self.episodes > self.MAXepisodes):
 	    print "Final Simulacao"
-	    #self.arquivo.close()
+	    #self.file.close()
 	    #self.PC -= 1
 	    exit(-42)
             return
