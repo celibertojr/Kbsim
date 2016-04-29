@@ -41,7 +41,7 @@ class KBSimulation:
         thefood= None
         
         thebot = imp.load_source("bot", config['program'])
-        thefood = imp.load_source("bot2", config['foodp'])
+        #thefood = imp.load_source("bot2", config['foodp'])
         
         #print thebot
         #print thefood
@@ -53,12 +53,12 @@ class KBSimulation:
         #    thebot = imp.load_source("bot", "./Bots/Renderbot.py")
 
         self.bots = []
-        self.foods = []
+        #self.foods = []
         
         variavel=config['n']
         #print variavel
         
-        self.bots.append(thefood.load(self))
+        #self.bots.append(thefood.load(self))
         
 
         for j in range(config['n']):

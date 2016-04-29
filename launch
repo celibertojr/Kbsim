@@ -1,4 +1,4 @@
-#! /opt/local/bin/python -B
+#! /usr/bin/python -B
 
 import sys, os.path
 import argparse, ConfigParser, ast
