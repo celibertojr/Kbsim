@@ -14,7 +14,7 @@ class QL(Kilobot):
         Kilobot.__init__(self, sim)
 	
 	self.add = open("Qfile.txt",'wb')
-	self.addtime = open("Run_Time.txt",'wb')
+	
 	
 	self.steps = 0    #number of steps
 	self.episodes=0   # number of episodes 
